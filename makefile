@@ -1,7 +1,7 @@
 ODIR = build/obj
 SRCDIR = src
 
-_OBJ = hidato.o timer.o util.o
+_OBJ = hidato.o timer.o util.o board.o score.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 _DEPS = timer.h util.h

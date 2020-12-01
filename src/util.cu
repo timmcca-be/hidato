@@ -1,5 +1,4 @@
 #include <utility>
-#include <stdlib.h>
 
 // quicksort
 void sort(int * values, int length) {
