@@ -6,14 +6,10 @@ void sort(int * values, int length) {
         return;
     }
     int pivot = values[0];
-    int center = length;
-    for(int i = 1; i < center; i++) {
-        if(values[i] > pivot) {
-            center -= 1;
-            while(values[center] > pivot && center > i) {
-                center -= 1;
-            }
-            std::swap(values[i], values[center]);
+    int center = 1;
+    for(int i = 1; i < length; i++) {
+        if(values[i] < pivot) {
+            std::swap(values[i], values[center++]);
         }
     }
     values[0] = values[center - 1];
