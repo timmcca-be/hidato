@@ -23,7 +23,74 @@ void scoreSolutions(int * comparisons, int * solutions, int numSolutionsToTest, 
 }
 
 __global__ void
-scoreSolutionsParallel(int * comparisons, int * solutions, int * score) {
+scoreSolutionsParallelBySolution(int * comparisons, int * solutions, int * scores, int numEmptySlots) {
+    int score = 0;
+    int * solution = solutions + blockIdx.x * numEmptySlots;
+    for(int i = 0; i < numEmptySlots; i++) {
+        int value = solution[i];
+        for(int j = 0; j < 8; j++) {
+            int compareValue = comparisons[8 * i + j];
+            if(compareValue == 0) {
+                continue;
+            } else if(compareValue < 0) {
+                compareValue = solution[-compareValue - 1];
+            }
+            if(value == compareValue + 1 || value == compareValue - 1) {
+                score += 1;
+            }
+        }
+    }
+    scores[blockIdx.x] = score;
+}
+
+__global__ void
+scoreSolutionsParallelByRow(int * comparisons, int * solutions, int * scores) {
+    extern __shared__ int comparisonResults[];
+
+    int * solution = solutions + blockIdx.x * blockDim.x;
+    int value = solution[threadIdx.x];
+    int comparisonStart = threadIdx.x * 8;
+    int comparisonEnd = comparisonStart + 8;
+    int score = 0;
+    for(int i = comparisonStart; i < comparisonEnd; i++) {
+        int compareValue = comparisons[i];
+        if(compareValue != 0) {
+            if(compareValue < 0) {
+                compareValue = solution[-compareValue - 1];
+            }
+            if(value == compareValue + 1 || value == compareValue - 1) {
+                score++;
+            }
+        }
+    }
+    comparisonResults[threadIdx.x] = score;
+    __syncthreads();
+
+    int lastI = blockDim.x;
+    // parallel reduction - take the sum of all results in shared mem into the first element
+    for(int i = blockDim.x >> 1; i > 0; i >>= 1) {
+        if(threadIdx.x >= i) {
+            return;
+        }
+        comparisonResults[threadIdx.x] += comparisonResults[threadIdx.x + i];
+        // each iteration halves the remaining results - if the remaining chunk has an odd number of elements,
+        //   the last thread needs to account for the last two elements
+        if(threadIdx.x == i - 1) {
+            int twoI = i + i;
+            if(lastI > twoI) {
+                comparisonResults[threadIdx.x] += comparisonResults[twoI];
+            }
+        }
+        lastI = i;
+        __syncthreads();
+    }
+    if(threadIdx.x == 0) {
+        scores[blockIdx.x] = comparisonResults[0];
+    }
+}
+
+__global__ void
+scoreSolutionsParallel(int * comparisons, int * solutions, int * scores) {
     extern __shared__ int comparisonResults[];
 
     int threadIndex = threadIdx.y * blockDim.x + threadIdx.x;
@@ -32,7 +99,7 @@ scoreSolutionsParallel(int * comparisons, int * solutions, int * score) {
     if(compareValue == 0) {
         comparisonResults[threadIndex] = 0;
     } else {
-        int * solution = solutions + numThreads * blockIdx.x;
+        int * solution = solutions + blockDim.y * blockIdx.x;
         int value = solution[threadIdx.y];
         if(compareValue < 0) {
             compareValue = solution[-compareValue - 1];
@@ -60,6 +127,6 @@ scoreSolutionsParallel(int * comparisons, int * solutions, int * score) {
         __syncthreads();
     }
     if(threadIndex == 0) {
-        score[blockIdx.x] = comparisonResults[0];
+        scores[blockIdx.x] = comparisonResults[0];
     }
 }

@@ -46,7 +46,7 @@ int main(int argc, char ** argv) {
     }
 
     // Generate a bunch of random solutions
-    int numSolutionsToTest = 2000;
+    int numSolutionsToTest = 10000;
     std::cout << "\n\nGenerating " << numSolutionsToTest - 1 << " random solutions to test, followed by the correct solution. The last score listed for each algorithm should be "
         << 2 * numEmptySlots << ".\n\n";
     int * solutions = new int[numEmptySlots * numSolutionsToTest];
@@ -65,10 +65,11 @@ int main(int argc, char ** argv) {
     cpuTimer.start();
     scoreSolutions(comparisons, solutions, numSolutionsToTest, numEmptySlots, scores);
     cpuTimer.stop();
-    std::cout << "Scores by sequential algorithm (" << cpuTimer.elapsed() << " ms):\n";
+    std::cout << "Scores by sequential algorithm:\n";
     for(int i = 0; i < numSolutionsToTest; i++) {
         std::cout << scores[i] << " ";
     }
+    std::cout << "\n\nSequential algorithm: " << cpuTimer.elapsed() << " ms\n";
 
     int * solutionsDevice;
     int solutionsSize = numEmptySlots * numSolutionsToTest * sizeof(int);
@@ -77,7 +78,8 @@ int main(int argc, char ** argv) {
     delete[] solutions;
 
     int * scoresDevice;
-    cudaMalloc((void**) &scoresDevice, numSolutionsToTest * sizeof(int));
+    int scoresSize = numSolutionsToTest * sizeof(int);
+    cudaMalloc((void**) &scoresDevice, scoresSize);
 
     dim3 grid(8, numEmptySlots);
     dim3 blockGrid(numSolutionsToTest);
@@ -87,15 +89,60 @@ int main(int argc, char ** argv) {
     scoreSolutionsParallel<<<blockGrid, grid, sharedMemorySize>>>(board.comparisonsGpu, solutionsDevice, scoresDevice);
     gpuTimer.stop();
 
-    cudaFree(solutionsDevice);
-
-    cudaMemcpy(scores, scoresDevice, sizeof(int), cudaMemcpyDeviceToHost);
-    cudaFree(scoresDevice);
-
-    std::cout << "\n\nScores by parallel algorithm (" << gpuTimer.elapsed() << " ms):\n";
+    int * parallelScores = new int[numSolutionsToTest];
+    cudaMemcpy(parallelScores, scoresDevice, scoresSize, cudaMemcpyDeviceToHost);
+    bool resultsCorrect = true;
     for(int i = 0; i < numSolutionsToTest; i++) {
-        std::cout << scores[i] << " ";
+        if(parallelScores[i] != scores[i]) {
+            resultsCorrect = false;
+            break;
+        }
     }
+    if(resultsCorrect) {
+        std::cout << "Parallel by cell algorithm: " << gpuTimer.elapsed() << " ms\n";
+    } else {
+        std::cout << "Parallel by cell algorithm returned incorrect answer\n";
+    }
+
+    dim3 byRowGrid(numEmptySlots);
+    sharedMemorySize = numEmptySlots * sizeof(int);
+    gpuTimer.start();
+    scoreSolutionsParallelByRow<<<blockGrid, byRowGrid, sharedMemorySize>>>(board.comparisonsGpu, solutionsDevice, scoresDevice);
+    gpuTimer.stop();
+
+    cudaMemcpy(parallelScores, scoresDevice, scoresSize, cudaMemcpyDeviceToHost);
+    resultsCorrect = true;
+    for(int i = 0; i < numSolutionsToTest; i++) {
+        if(parallelScores[i] != scores[i]) {
+            resultsCorrect = false;
+            break;
+        }
+    }
+    if(resultsCorrect) {
+        std::cout << "Parallel by row algorithm: " << gpuTimer.elapsed() << " ms\n";
+    } else {
+        std::cout << "Parallel by row algorithm returned incorrect answer\n";
+    }
+
+    gpuTimer.start();
+    scoreSolutionsParallelBySolution<<<blockGrid, 1, sharedMemorySize>>>(board.comparisonsGpu, solutionsDevice, scoresDevice, numEmptySlots);
+    gpuTimer.stop();
+
+    cudaMemcpy(parallelScores, scoresDevice, scoresSize, cudaMemcpyDeviceToHost);
+    resultsCorrect = true;
+    for(int i = 0; i < numSolutionsToTest; i++) {
+        if(parallelScores[i] != scores[i]) {
+            resultsCorrect = false;
+            break;
+        }
+    }
+    if(resultsCorrect) {
+        std::cout << "Parallel by solution algorithm: " << gpuTimer.elapsed() << " ms\n";
+    } else {
+        std::cout << "Parallel by solution algorithm returned incorrect answer\n";
+    }
+
+    cudaFree(solutionsDevice);
+    cudaFree(scoresDevice);
     delete[] scores;
-    std::cout << "\n\n";
 }
