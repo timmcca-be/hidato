@@ -142,7 +142,10 @@ int main(int argc, char ** argv) {
         std::cout << "Parallel by solution algorithm returned incorrect answer\n";
     }
 
+    std::cout << "\n";
+
     cudaFree(solutionsDevice);
     cudaFree(scoresDevice);
     delete[] scores;
+    delete[] parallelScores;
 }
