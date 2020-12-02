@@ -9,8 +9,9 @@ void scoreSolutions(int * comparisons, int * solutions, int numSolutionsToTest, 
             for(int j = 0; j < 8; j++) {
                 int compareValue = comparisons[8 * i + j];
                 if(compareValue == 0) {
-                    continue;
-                } else if(compareValue < 0) {
+                    break;
+                }
+                if(compareValue < 0) {
                     compareValue = solution[-compareValue - 1];
                 }
                 if(value == compareValue + 1 || value == compareValue - 1) {
@@ -31,8 +32,9 @@ scoreSolutionsParallelBySolution(int * comparisons, int * solutions, int * score
         for(int j = 0; j < 8; j++) {
             int compareValue = comparisons[8 * i + j];
             if(compareValue == 0) {
-                continue;
-            } else if(compareValue < 0) {
+                break;
+            }
+            if(compareValue < 0) {
                 compareValue = solution[-compareValue - 1];
             }
             if(value == compareValue + 1 || value == compareValue - 1) {
@@ -54,13 +56,14 @@ scoreSolutionsParallelByRow(int * comparisons, int * solutions, int * scores) {
     int score = 0;
     for(int i = comparisonStart; i < comparisonEnd; i++) {
         int compareValue = comparisons[i];
-        if(compareValue != 0) {
-            if(compareValue < 0) {
-                compareValue = solution[-compareValue - 1];
-            }
-            if(value == compareValue + 1 || value == compareValue - 1) {
-                score++;
-            }
+        if(compareValue == 0) {
+            break;
+        }
+        if(compareValue < 0) {
+            compareValue = solution[-compareValue - 1];
+        }
+        if(value == compareValue + 1 || value == compareValue - 1) {
+            score++;
         }
     }
     comparisonResults[threadIdx.x] = score;

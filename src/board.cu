@@ -44,26 +44,30 @@ HidatoBoard::HidatoBoard(int * board, int numRows, int numCols) {
         bool canGoDown = (index / numCols) + 1 < numRows;
         int comparisonIndex = 8 * i;
         if(canGoUp) {
-            comparisons[comparisonIndex++] = board[index - numCols];
-            if(canGoLeft) {
+            if(board[index - numCols] != 0) {
+                comparisons[comparisonIndex++] = board[index - numCols];
+            }
+            if(canGoLeft && board[index - numCols - 1] != 0) {
                 comparisons[comparisonIndex++] = board[index - numCols - 1];
             }
-            if(canGoRight) {
+            if(canGoRight && board[index - numCols + 1] != 0) {
                 comparisons[comparisonIndex++] = board[index - numCols + 1];
             }
         }
-        if(canGoLeft) {
+        if(canGoLeft && board[index - 1] != 0) {
             comparisons[comparisonIndex++] = board[index - 1];
         }
-        if(canGoRight) {
+        if(canGoRight && board[index + 1] != 0) {
             comparisons[comparisonIndex++] = board[index + 1];
         }
         if(canGoDown) {
-            comparisons[comparisonIndex++] = board[index + numCols];
-            if(canGoLeft) {
+            if(board[index + numCols] != 0) {
+                comparisons[comparisonIndex++] = board[index + numCols];
+            }
+            if(canGoLeft && board[index + numCols - 1] != 0) {
                 comparisons[comparisonIndex++] = board[index + numCols - 1];
             }
-            if(canGoRight) {
+            if(canGoRight && board[index + numCols + 1] != 0) {
                 comparisons[comparisonIndex] = board[index + numCols + 1];
             }
         }
