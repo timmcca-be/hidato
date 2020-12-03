@@ -69,7 +69,7 @@ int main(int argc, char ** argv) {
     for(int i = 0; i < numSolutionsToTest; i++) {
         std::cout << scores[i] << " ";
     }
-    std::cout << "\n\nSequential algorithm: " << cpuTimer.elapsed() << " ms\n";
+    std::cout << "\n\n" << "Sequential algorithm: " << cpuTimer.elapsed() << " ms" << "\n";
 
     int * solutionsDevice;
     int solutionsSize = numEmptySlots * numSolutionsToTest * sizeof(int);
@@ -99,7 +99,7 @@ int main(int argc, char ** argv) {
         }
     }
     if(resultsCorrect) {
-        std::cout << "Parallel by cell algorithm: " << gpuTimer.elapsed() << " ms\n";
+        std::cout << "Parallel by cell algorithm: " << gpuTimer.elapsed() << " ms" << "\n";
     } else {
         std::cout << "Parallel by cell algorithm returned incorrect answer\n";
     }
@@ -119,7 +119,7 @@ int main(int argc, char ** argv) {
         }
     }
     if(resultsCorrect) {
-        std::cout << "Parallel by row algorithm: " << gpuTimer.elapsed() << " ms\n";
+        std::cout << "Parallel by row algorithm: " << gpuTimer.elapsed() << " ms" << "\n";
     } else {
         std::cout << "Parallel by row algorithm returned incorrect answer\n";
     }
@@ -137,7 +137,7 @@ int main(int argc, char ** argv) {
         }
     }
     if(resultsCorrect) {
-        std::cout << "Parallel by solution algorithm: " << gpuTimer.elapsed() << " ms\n";
+        std::cout << "Parallel by solution algorithm: " << gpuTimer.elapsed() << " ms" << "\n";
     } else {
         std::cout << "Parallel by solution algorithm returned incorrect answer\n";
     }

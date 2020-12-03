@@ -5,7 +5,8 @@ void scoreSolutions(int * comparisons, int * solutions, int numSolutionsToTest, 
         int score = 0;
         int * solution = solutions + s * numEmptySlots;
         for(int i = 0; i < numEmptySlots; i++) {
-            int value = solution[i];
+            int oneAboveValue = solution[i] + 1;
+            int oneBelowValue = oneAboveValue - 2;
             for(int j = 0; j < 8; j++) {
                 int compareValue = comparisons[8 * i + j];
                 if(compareValue == 0) {
@@ -14,7 +15,7 @@ void scoreSolutions(int * comparisons, int * solutions, int numSolutionsToTest, 
                 if(compareValue < 0) {
                     compareValue = solution[-compareValue - 1];
                 }
-                if(value == compareValue + 1 || value == compareValue - 1) {
+                if(compareValue == oneAboveValue || compareValue == oneBelowValue) {
                     score += 1;
                 }
             }
@@ -28,7 +29,8 @@ scoreSolutionsParallelBySolution(int * comparisons, int * solutions, int * score
     int score = 0;
     int * solution = solutions + blockIdx.x * numEmptySlots;
     for(int i = 0; i < numEmptySlots; i++) {
-        int value = solution[i];
+        int oneAboveValue = solution[i] + 1;
+        int oneBelowValue = oneAboveValue - 2;
         for(int j = 0; j < 8; j++) {
             int compareValue = comparisons[8 * i + j];
             if(compareValue == 0) {
@@ -37,7 +39,7 @@ scoreSolutionsParallelBySolution(int * comparisons, int * solutions, int * score
             if(compareValue < 0) {
                 compareValue = solution[-compareValue - 1];
             }
-            if(value == compareValue + 1 || value == compareValue - 1) {
+            if(compareValue == oneAboveValue || compareValue == oneBelowValue) {
                 score += 1;
             }
         }
@@ -50,7 +52,8 @@ scoreSolutionsParallelByRow(int * comparisons, int * solutions, int * scores) {
     extern __shared__ int comparisonResults[];
 
     int * solution = solutions + blockIdx.x * blockDim.x;
-    int value = solution[threadIdx.x];
+    int oneAboveValue = solution[threadIdx.x] + 1;
+    int oneBelowValue = oneAboveValue - 2;
     int comparisonStart = threadIdx.x * 8;
     int comparisonEnd = comparisonStart + 8;
     int score = 0;
@@ -62,7 +65,7 @@ scoreSolutionsParallelByRow(int * comparisons, int * solutions, int * scores) {
         if(compareValue < 0) {
             compareValue = solution[-compareValue - 1];
         }
-        if(value == compareValue + 1 || value == compareValue - 1) {
+        if(compareValue == oneAboveValue || compareValue == oneBelowValue) {
             score++;
         }
     }
